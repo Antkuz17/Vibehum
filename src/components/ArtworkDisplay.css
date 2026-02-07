@@ -1,0 +1,154 @@
+/* ─── ArtworkDisplay ─── */
+
+.artwork-display {
+  /* Container has no border — the frame handles it */
+}
+
+.artwork-title {
+  font-family: var(--font-accent);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--color-hot-magenta);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-md);
+}
+
+/* ─── Artwork Frame ─── */
+
+.artwork-frame {
+  position: relative;
+  aspect-ratio: 1;
+  border: 3px solid var(--color-hot-magenta);
+  box-shadow: 12px 12px 0px var(--color-electric-cyan);
+  overflow: hidden;
+}
+
+.artwork-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+}
+
+/* ─── Playing Rotation ─── */
+
+.artwork-display.is-playing .artwork-frame {
+  animation: artwork-rock 3s ease-in-out infinite;
+}
+
+@keyframes artwork-rock {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  75% { transform: rotate(-5deg); }
+}
+
+/* ─── Chromatic Aberration on Hover ─── */
+
+.artwork-aberration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  z-index: 3;
+  transition: opacity 200ms ease-out;
+}
+
+.artwork-frame:hover .artwork-aberration {
+  opacity: 0.6;
+}
+
+.artwork-red {
+  transform: translate(-2px, 0);
+  filter: grayscale(100%) brightness(0.4) sepia(100%) hue-rotate(-30deg) saturate(600%);
+}
+
+.artwork-blue {
+  transform: translate(2px, 0);
+  filter: grayscale(100%) brightness(0.4) sepia(100%) hue-rotate(180deg) saturate(600%);
+}
+
+/* ─── Placeholder ─── */
+
+.artwork-placeholder {
+  position: relative;
+  aspect-ratio: 1;
+  border: 3px solid var(--color-hot-magenta);
+  box-shadow: 12px 12px 0px var(--color-electric-cyan);
+  background: var(--color-deep-black);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.artwork-placeholder-pattern {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(0, 217, 255, 0.04) 20px,
+      rgba(0, 217, 255, 0.04) 22px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 20px,
+      rgba(255, 0, 110, 0.04) 20px,
+      rgba(255, 0, 110, 0.04) 22px
+    );
+}
+
+.artwork-placeholder-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: var(--space-lg);
+}
+
+.artwork-placeholder-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--color-pure-white);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+  margin-bottom: var(--space-sm);
+  word-break: break-word;
+}
+
+.artwork-placeholder-genre {
+  font-family: var(--font-accent);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--color-electric-cyan);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.artwork-display.is-playing .artwork-placeholder {
+  animation: artwork-rock 3s ease-in-out infinite;
+}
+
+/* ─── Reduced Motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .artwork-display.is-playing .artwork-frame,
+  .artwork-display.is-playing .artwork-placeholder {
+    animation: none;
+  }
+
+  .artwork-aberration {
+    transition: none;
+  }
+}

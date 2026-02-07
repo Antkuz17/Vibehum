@@ -1,0 +1,185 @@
+/* ─── MusicPlayer ─── */
+
+.music-player {
+  border: 2px solid var(--color-electric-cyan);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  box-shadow: 8px 8px 0px var(--color-hot-magenta);
+  background: var(--color-deep-black);
+}
+
+.player-title {
+  font-family: var(--font-accent);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--color-hot-magenta);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-md);
+}
+
+/* ─── Waveform ─── */
+
+.player-waveform-container {
+  width: 100%;
+  height: 80px;
+  background: var(--color-deep-black);
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--space-md);
+}
+
+.player-waveform {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Controls ─── */
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* ─── Play Button ─── */
+
+.player-play-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--color-electric-cyan) 0%, var(--color-hot-magenta) 100%);
+  color: var(--color-pure-white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(0, 217, 255, 0.3);
+  transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 150ms ease-out;
+}
+
+.player-play-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+}
+
+.player-play-btn:active {
+  transform: scale(0.95);
+}
+
+.player-icon {
+  display: block;
+}
+
+/* ─── Progress Bar ─── */
+
+.player-progress-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-progress-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(232, 232, 232, 0.15);
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  margin-bottom: var(--space-xs);
+}
+
+.player-progress-fill {
+  height: 100%;
+  background: var(--color-electric-cyan);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  transition: width 100ms linear;
+}
+
+.player-progress-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(200%); }
+}
+
+/* ─── Time Display ─── */
+
+.player-time {
+  display: flex;
+  gap: 4px;
+  font-family: var(--font-accent);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.player-time-current {
+  color: var(--color-electric-cyan);
+}
+
+.player-time-separator {
+  color: rgba(232, 232, 232, 0.3);
+}
+
+.player-time-duration {
+  color: var(--color-chrome-silver);
+}
+
+/* ─── Download Button ─── */
+
+.player-download-btn {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--color-pure-white);
+  background: var(--color-hot-magenta);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 4px 4px 0px var(--color-electric-cyan);
+  transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 150ms ease-out;
+}
+
+.player-download-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--color-electric-cyan);
+}
+
+.player-download-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--color-electric-cyan);
+}
+
+/* ─── Reduced Motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .player-play-btn,
+  .player-download-btn {
+    transition: none;
+  }
+
+  .player-progress-shimmer {
+    animation: none;
+  }
+}

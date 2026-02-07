@@ -5,6 +5,9 @@ import AudioRecorder from './components/AudioRecorder'
 import GenreSelector from './components/GenreSelector'
 import ThemeInput from './components/ThemeInput'
 import GenerateButton from './components/GenerateButton'
+import MusicPlayer from './components/MusicPlayer'
+import LyricsDisplay from './components/LyricsDisplay'
+import ArtworkDisplay from './components/ArtworkDisplay'
 import { generateCompleteSong } from './services/apiService'
 
 function App() {
@@ -14,6 +17,7 @@ function App() {
   const [generationStep, setGenerationStep] = useState('IDLE')
   const [generatedSong, setGeneratedSong] = useState(null)
   const [generationError, setGenerationError] = useState(null)
+  const [isPlaying, setIsPlaying] = useState(false)
 
   const handleRecordingComplete = (data) => {
     setRecordingData(data)
@@ -27,6 +31,7 @@ function App() {
 
     setGenerationError(null)
     setGeneratedSong(null)
+    setIsPlaying(false)
 
     try {
       const result = await generateCompleteSong(
@@ -53,6 +58,13 @@ function App() {
     setGenerationError(null)
   }
 
+  const handleStartOver = () => {
+    setGenerationStep('IDLE')
+    setGenerationError(null)
+    setGeneratedSong(null)
+    setIsPlaying(false)
+  }
+
   return (
     <div className="app">
       <h1 className="app-title">REVERSE SHAZAM</h1>
@@ -77,41 +89,36 @@ function App() {
         onRetry={handleRetry}
       />
 
-      {/* Generated song results */}
+      {/* ─── Results Section ─── */}
       {generatedSong && generationStep === 'COMPLETE' && (
         <div className="results-section">
-          {/* Lyrics */}
-          {generatedSong.lyrics && (
-            <div className="result-card">
-              <h3 className="result-card-title">LYRICS</h3>
-              <pre className="result-lyrics">{generatedSong.lyrics}</pre>
+          {/* Two-column: lyrics left, artwork right */}
+          <div className="results-grid">
+            <div className="results-col-lyrics">
+              <LyricsDisplay
+                lyrics={generatedSong.lyrics}
+                isPlaying={isPlaying}
+              />
             </div>
-          )}
 
-          {/* Audio Player + Album Art side by side */}
-          <div className="result-media">
-            {generatedSong.audioBlob && (
-              <div className="result-card result-player-card">
-                <h3 className="result-card-title">YOUR SONG</h3>
-                <audio
-                  className="result-audio"
-                  controls
-                  src={URL.createObjectURL(generatedSong.audioBlob)}
-                />
-              </div>
-            )}
-
-            {generatedSong.artworkUrl && (
-              <div className="result-card result-artwork-card">
-                <h3 className="result-card-title">ALBUM ART</h3>
-                <img
-                  className="result-artwork"
-                  src={generatedSong.artworkUrl}
-                  alt="Generated album artwork"
-                />
-              </div>
-            )}
+            <div className="results-col-artwork">
+              <ArtworkDisplay
+                artworkUrl={generatedSong.artworkUrl}
+                title={theme}
+                genre={selectedGenre}
+                isPlaying={isPlaying}
+              />
+            </div>
           </div>
+
+          {/* Full-width player below */}
+          {generatedSong.audioBlob && (
+            <MusicPlayer
+              audioBlob={generatedSong.audioBlob}
+              title={theme}
+              onPlayStateChange={setIsPlaying}
+            />
+          )}
 
           {/* Non-critical warnings */}
           {generatedSong.errors.length > 0 && (
@@ -121,6 +128,13 @@ function App() {
               ))}
             </div>
           )}
+
+          {/* Start over button */}
+          <div className="results-footer">
+            <button className="start-over-btn" onClick={handleStartOver}>
+              GENERATE ANOTHER SONG
+            </button>
+          </div>
         </div>
       )}
     </div>

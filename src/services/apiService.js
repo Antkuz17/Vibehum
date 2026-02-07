@@ -11,12 +11,12 @@ export const GENRE_PROMPTS = {
 
 // ─── API Configuration ───
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const ELEVENLABS_MUSIC_URL = 'https://api.elevenlabs.io/v1/music/generate'
 const HUGGINGFACE_SD_URL = 'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0'
 
-function getAnthropicKey() {
-  return import.meta.env.VITE_ANTHROPIC_API_KEY || ''
+function getOpenRouterKey() {
+  return import.meta.env.VITE_OPENROUTER_API_KEY || ''
 }
 
 function getElevenLabsKey() {
@@ -73,34 +73,37 @@ function truncateAtSentenceBoundary(text, maxWords) {
 // ─── API Functions ───
 
 /**
- * Generate lyrics using Anthropic Claude.
+ * Generate lyrics using Claude via OpenRouter.
  * @param {string} theme - Song theme/topic
  * @param {string} genre - Selected genre name
  * @returns {Promise<string>} Generated lyrics (100-150 words)
  */
 export async function generateLyrics(theme, genre) {
-  const apiKey = getAnthropicKey()
-  if (!apiKey) throw new Error('Anthropic API key not configured. Add VITE_ANTHROPIC_API_KEY to your .env file.')
+  const apiKey = getOpenRouterKey()
+  if (!apiKey) throw new Error('OpenRouter API key not configured. Add VITE_OPENROUTER_API_KEY to your .env file.')
 
   return retryWithBackoff(async () => {
-    const response = await axios.post(ANTHROPIC_API_URL, {
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 512,
-      system: `You are a professional songwriter. Generate lyrics for a 30-second song. The lyrics MUST be between 100 and 150 words. Keep the lyrics singable, with clear rhythm and rhyme that matches the genre style. Return ONLY the lyrics text — no titles, no labels, no formatting marks.`,
-      messages: [{
-        role: 'user',
-        content: `Write ${genre} song lyrics about: ${theme}`,
-      }],
+    const response = await axios.post(OPENROUTER_API_URL, {
+      model: 'anthropic/claude-sonnet-4-5',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional songwriter. Generate lyrics for a 30-second song. The lyrics MUST be between 100 and 150 words. Keep the lyrics singable, with clear rhythm and rhyme that matches the genre style. Return ONLY the lyrics text — no titles, no labels, no formatting marks.',
+        },
+        {
+          role: 'user',
+          content: `Write ${genre} song lyrics about: ${theme}`,
+        },
+      ],
     }, {
       headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
       },
       timeout: 30000,
     })
 
-    let lyrics = response.data.content[0].text.trim()
+    let lyrics = response.data.choices[0].message.content.trim()
 
     // Validate and adjust word count
     const wordCount = countWords(lyrics)
@@ -133,7 +136,7 @@ export async function generateMusic(analysisText, lyrics, genre) {
     }, {
       headers: {
         'xi-api-key': apiKey,
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
       },
       responseType: 'blob',
       timeout: 120000,
@@ -144,35 +147,38 @@ export async function generateMusic(analysisText, lyrics, genre) {
 }
 
 /**
- * Generate a Stable Diffusion image prompt using Claude.
+ * Generate a Stable Diffusion image prompt using Claude via OpenRouter.
  * @param {string} lyrics - Generated lyrics
  * @param {string} genre - Selected genre name
  * @param {object} analysisResults - Audio analysis results object
  * @returns {Promise<string>} Image generation prompt
  */
 export async function generateImagePrompt(lyrics, genre, analysisResults) {
-  const apiKey = getAnthropicKey()
-  if (!apiKey) throw new Error('Anthropic API key not configured. Add VITE_ANTHROPIC_API_KEY to your .env file.')
+  const apiKey = getOpenRouterKey()
+  if (!apiKey) throw new Error('OpenRouter API key not configured. Add VITE_OPENROUTER_API_KEY to your .env file.')
 
   return retryWithBackoff(async () => {
-    const response = await axios.post(ANTHROPIC_API_URL, {
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 256,
-      system: `You generate Stable Diffusion image prompts for album artwork. Style MUST be Neo-Retro Y2K aesthetic. Required elements: neon cyan (#00D9FF) and magenta (#FF006E) colors, geometric shapes, chrome/metallic textures, bold typography integration. NEVER include purple gradients. NEVER include organic/soft shapes. Think: vibrant digital collage, retro futuristic, high contrast. Return ONLY the image prompt — no explanation, no quotes.`,
-      messages: [{
-        role: 'user',
-        content: `Create an album art prompt for a ${genre} song. Energy: ${analysisResults.energyLevel}. Mood from lyrics: ${lyrics.slice(0, 200)}`,
-      }],
+    const response = await axios.post(OPENROUTER_API_URL, {
+      model: 'anthropic/claude-sonnet-4-5',
+      messages: [
+        {
+          role: 'system',
+          content: 'You generate Stable Diffusion image prompts for album artwork. Style MUST be Neo-Retro Y2K aesthetic. Required elements: neon cyan (#00D9FF) and magenta (#FF006E) colors, geometric shapes, chrome/metallic textures, bold typography integration. NEVER include purple gradients. NEVER include organic/soft shapes. Think: vibrant digital collage, retro futuristic, high contrast. Return ONLY the image prompt — no explanation, no quotes.',
+        },
+        {
+          role: 'user',
+          content: `Create an album art prompt for a ${genre} song. Energy: ${analysisResults.energyLevel}. Mood from lyrics: ${lyrics.slice(0, 200)}`,
+        },
+      ],
     }, {
       headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
       },
       timeout: 30000,
     })
 
-    return response.data.content[0].text.trim()
+    return response.data.choices[0].message.content.trim()
   })
 }
 
@@ -195,7 +201,7 @@ export async function generateArtwork(imagePrompt) {
       }, {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
         },
         responseType: 'blob',
         timeout: 90000,

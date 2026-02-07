@@ -2,6 +2,7 @@
 
 .generate-section {
   padding: var(--space-lg) 0;
+  position: relative;
 }
 
 /* ─── Main Generate Button ─── */
@@ -112,27 +113,78 @@
   color: var(--color-acid-lime);
 }
 
-.progress-step-estimate {
-  font-family: var(--font-accent);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  color: rgba(0, 217, 255, 0.6);
+/* ─── Pixel Progress Bar ─── */
+
+.pixel-progress {
+  margin-bottom: var(--space-lg);
 }
 
-/* ─── Status Text ─── */
+.pixel-progress-track {
+  display: flex;
+  gap: 3px;
+  margin-bottom: var(--space-sm);
+}
 
-.progress-status {
+.pixel-block {
+  flex: 1;
+  height: 16px;
+  background: rgba(232, 232, 232, 0.08);
+  border: 1px solid rgba(232, 232, 232, 0.12);
+}
+
+.pixel-block.is-filled {
+  background: var(--color-electric-cyan);
+  border-color: var(--color-electric-cyan);
+  box-shadow: 0 0 6px rgba(0, 217, 255, 0.4);
+}
+
+.pixel-block.is-current {
+  background: var(--color-electric-cyan);
+  border-color: var(--color-electric-cyan);
+  animation: pixel-blink 0.6s steps(2) infinite;
+}
+
+@keyframes pixel-blink {
+  50% { opacity: 0.3; }
+}
+
+.pixel-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pixel-progress-step {
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-chrome-silver);
-  text-align: center;
-  animation: status-blink 1.5s steps(2) infinite;
 }
 
-@keyframes status-blink {
-  50% { opacity: 0.5; }
+.pixel-progress-time {
+  font-family: var(--font-accent);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--color-electric-cyan);
 }
+
+/* ─── Scan Line Overlay ─── */
+
+.scanline-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 217, 255, 0.015) 3px,
+    rgba(0, 217, 255, 0.015) 4px
+  );
+  z-index: 1;
+}
+
+/* ─── Complete / Status ─── */
 
 .progress-complete {
   font-family: var(--font-heading);
@@ -198,7 +250,8 @@
     animation: none;
   }
 
-  .progress-status {
+  .pixel-block.is-current {
     animation: none;
+    opacity: 1;
   }
 }
