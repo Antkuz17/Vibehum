@@ -67,6 +67,12 @@ function App() {
 
   return (
     <div className="app">
+      {import.meta.env.VITE_DEMO_MODE === 'true' && (
+        <div className="demo-mode-banner">
+          DEMO MODE — Music generation uses mock audio
+        </div>
+      )}
+
       <h1 className="app-title">REVERSE SHAZAM</h1>
 
       <AudioRecorder onRecordingComplete={handleRecordingComplete} />
