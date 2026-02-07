@@ -18,6 +18,7 @@ function App() {
   const [generatedSong, setGeneratedSong] = useState(null)
   const [generationError, setGenerationError] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [audioRef, setAudioRef] = useState(null)
 
   const handleRecordingComplete = (data) => {
     setRecordingData(data)
@@ -104,6 +105,7 @@ function App() {
               <LyricsDisplay
                 lyrics={generatedSong.lyrics}
                 isPlaying={isPlaying}
+                audioRef={audioRef}
               />
             </div>
 
@@ -123,6 +125,7 @@ function App() {
               audioBlob={generatedSong.audioBlob}
               title={theme}
               onPlayStateChange={setIsPlaying}
+              onAudioRef={setAudioRef}
             />
           )}
 

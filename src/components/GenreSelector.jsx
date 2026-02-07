@@ -6,6 +6,10 @@ const GENRES = [
   'Energetic EDM',
   'Sad Jazz',
   'Upbeat Rock',
+  'Dreamy Shoegaze',
+  'Trap Beats',
+  'Indie Folk',
+  'Synthwave',
 ]
 
 function GenreSelector({ onChange, disabled }) {

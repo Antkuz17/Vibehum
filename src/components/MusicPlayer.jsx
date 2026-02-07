@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import './MusicPlayer.css'
 
-function MusicPlayer({ audioBlob, title, onPlayStateChange }) {
+function MusicPlayer({ audioBlob, title, onPlayStateChange, onAudioRef }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -17,6 +17,11 @@ function MusicPlayer({ audioBlob, title, onPlayStateChange }) {
     if (!audioBlob) return null
     return URL.createObjectURL(audioBlob)
   }, [audioBlob])
+
+  // Expose audio ref to parent for lyrics sync
+  useEffect(() => {
+    if (onAudioRef) onAudioRef(audioRef)
+  }, [onAudioRef])
 
   // Clean up object URL on unmount
   useEffect(() => {

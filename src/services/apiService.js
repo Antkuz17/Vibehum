@@ -11,6 +11,10 @@ export const GENRE_PROMPTS = {
   'Energetic EDM': 'energetic EDM with heavy bass drops, synth leads, and four-on-the-floor kick',
   'Sad Jazz': 'melancholic jazz with sultry saxophone, slow piano, and brushed drums',
   'Upbeat Rock': 'upbeat rock with driving electric guitar, punchy drums, and energetic bass',
+  'Dreamy Shoegaze': 'dreamy shoegaze with wall-of-sound guitars, ethereal vocals, heavy reverb and delay, wall of distortion',
+  'Trap Beats': 'trap music with heavy 808 bass, rapid hi-hat rolls, snare rolls, dark atmospheric synths',
+  'Indie Folk': 'indie folk with fingerpicked acoustic guitar, warm vocal harmonies, organic percussion, intimate production',
+  'Synthwave': 'synthwave with analog synthesizers, 80s drum machines, retro basslines, nostalgic arpeggios, neon atmosphere',
 }
 
 // ─── API Configuration ───
