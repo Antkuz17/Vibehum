@@ -1,0 +1,359 @@
+/* ─── AudioRecorder ─── */
+
+.audio-recorder {
+  position: relative;
+}
+
+.recorder-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--color-pure-white);
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-lg);
+}
+
+/* ─── Waveform ─── */
+
+.waveform-container {
+  width: 100%;
+  height: 150px;
+  background: var(--color-deep-black);
+  border: 2px solid var(--color-electric-cyan);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--space-md);
+}
+
+.waveform-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Timer ─── */
+
+.timer-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.timer-display {
+  font-family: var(--font-accent);
+  font-weight: 500;
+  font-size: 32px;
+  color: var(--color-electric-cyan);
+  text-shadow: 0 0 12px rgba(0, 217, 255, 0.6);
+  letter-spacing: 0.05em;
+}
+
+.timer-max {
+  font-family: var(--font-accent);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-chrome-silver);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ─── Status ─── */
+
+.status-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-chrome-silver);
+  margin-bottom: var(--space-lg);
+  min-height: 20px;
+}
+
+/* ─── Controls ─── */
+
+.controls-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-lg);
+  min-height: 80px;
+  align-items: center;
+}
+
+/* ─── Record Button ─── */
+
+.record-btn {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.record-btn-inner {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-electric-cyan) 0%, var(--color-hot-magenta) 100%);
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
+  transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 150ms ease-out;
+}
+
+.record-btn:hover .record-btn-inner {
+  transform: scale(1.08);
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.6), 0 0 60px rgba(255, 0, 110, 0.3);
+}
+
+.record-btn:active .record-btn-inner {
+  transform: scale(0.95);
+}
+
+.record-btn-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--color-chrome-silver);
+  letter-spacing: 0.15em;
+  margin-top: var(--space-sm);
+}
+
+/* ─── Stop Button (with pulsing rings) ─── */
+
+.stop-btn {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.stop-btn-inner {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-hot-magenta);
+  box-shadow: 0 0 20px rgba(255, 0, 110, 0.5);
+  z-index: 2;
+  position: relative;
+}
+
+.stop-btn-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 2px solid var(--color-hot-magenta);
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ring-1 {
+  width: 80px;
+  height: 80px;
+  animation: pulse-ring 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+.ring-2 {
+  width: 100px;
+  height: 100px;
+  animation: pulse-ring 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s infinite;
+}
+
+.ring-3 {
+  width: 120px;
+  height: 120px;
+  animation: pulse-ring 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.stop-btn-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--color-chrome-silver);
+  letter-spacing: 0.15em;
+  margin-top: var(--space-sm);
+  position: relative;
+  z-index: 2;
+}
+
+.stop-btn:hover .stop-btn-inner {
+  transform: scale(1.05);
+}
+
+.stop-btn:active .stop-btn-inner {
+  transform: scale(0.95);
+}
+
+/* ─── Analyzing Indicator ─── */
+
+.analyzing-indicator {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 40px;
+}
+
+.analyzing-bar {
+  width: 6px;
+  background: var(--color-electric-cyan);
+  border-radius: 2px;
+  animation: analyzing-bounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
+.analyzing-bar:nth-child(1) { height: 16px; animation-delay: 0ms; }
+.analyzing-bar:nth-child(2) { height: 28px; animation-delay: 100ms; }
+.analyzing-bar:nth-child(3) { height: 40px; animation-delay: 200ms; }
+.analyzing-bar:nth-child(4) { height: 28px; animation-delay: 300ms; }
+.analyzing-bar:nth-child(5) { height: 16px; animation-delay: 400ms; }
+
+@keyframes analyzing-bounce {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+/* ─── Re-record / Try Again Button ─── */
+
+.rerecord-btn {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: var(--color-electric-cyan);
+  background: transparent;
+  border: 2px solid var(--color-electric-cyan);
+  border-radius: var(--radius-sm);
+  padding: 12px 32px;
+  cursor: pointer;
+  box-shadow: 8px 8px 0px var(--color-hot-magenta);
+  transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 150ms ease-out;
+}
+
+.rerecord-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 10px 10px 0px var(--color-hot-magenta);
+}
+
+.rerecord-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 4px 4px 0px var(--color-hot-magenta);
+}
+
+/* ─── Analysis Results ─── */
+
+.analysis-results {
+  border-top: 2px solid var(--color-electric-cyan);
+  padding-top: var(--space-lg);
+  animation: slide-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.analysis-title {
+  font-family: var(--font-accent);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--color-hot-magenta);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-md);
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.analysis-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.analysis-label {
+  font-family: var(--font-accent);
+  font-weight: 500;
+  font-size: 10px;
+  color: var(--color-chrome-silver);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.analysis-value {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--color-pure-white);
+}
+
+.analysis-description {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-acid-lime);
+  background: rgba(204, 255, 0, 0.05);
+  border: 1px solid rgba(204, 255, 0, 0.2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+/* ─── Reduced Motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .record-btn-inner,
+  .stop-btn-inner,
+  .rerecord-btn {
+    transition: none;
+  }
+
+  .stop-btn-ring {
+    animation: none;
+  }
+
+  .analyzing-bar {
+    animation: none;
+  }
+
+  .analysis-results {
+    animation: none;
+  }
+}

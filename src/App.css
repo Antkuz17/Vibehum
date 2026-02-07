@@ -14,6 +14,8 @@
   margin-bottom: var(--space-xl);
 }
 
+/* ─── Component Containers ─── */
+
 .audio-recorder,
 .genre-selector,
 .theme-input {
@@ -25,4 +27,117 @@
   padding: var(--space-lg);
   margin-bottom: var(--space-lg);
   box-shadow: 8px 8px 0px var(--color-hot-magenta);
+}
+
+/* ─── Results Section ─── */
+
+.results-section {
+  margin-top: var(--space-xl);
+  animation: results-appear 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes results-appear {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result-card {
+  border: 2px solid var(--color-electric-cyan);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  box-shadow: 8px 8px 0px var(--color-hot-magenta);
+}
+
+.result-card-title {
+  font-family: var(--font-accent);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--color-hot-magenta);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-md);
+}
+
+/* ─── Lyrics ─── */
+
+.result-lyrics {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--color-chrome-silver);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* ─── Media Row (Player + Artwork) ─── */
+
+.result-media {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 640px) {
+  .result-media {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Audio Player ─── */
+
+.result-player-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.result-audio {
+  width: 100%;
+  margin-top: auto;
+}
+
+/* ─── Album Artwork ─── */
+
+.result-artwork-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.result-artwork {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 3px solid var(--color-hot-magenta);
+  box-shadow: 12px 12px 0px var(--color-electric-cyan);
+}
+
+/* ─── Warnings ─── */
+
+.result-warnings {
+  margin-top: var(--space-md);
+}
+
+.result-warning {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-neon-orange);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid rgba(255, 61, 0, 0.3);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 61, 0, 0.05);
+  margin-bottom: var(--space-sm);
+}
+
+/* ─── Reduced Motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .results-section {
+    animation: none;
+  }
 }

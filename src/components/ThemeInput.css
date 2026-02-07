@@ -1,0 +1,109 @@
+/* ─── ThemeInput ─── */
+
+.theme-input {
+  position: relative;
+}
+
+.theme-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--color-pure-white);
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-lg);
+}
+
+/* ─── Field Container ─── */
+
+.theme-field {
+  position: relative;
+  background: var(--color-deep-black);
+  border: 2px solid var(--color-chrome-silver);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  /* Instant border color change — no transition */
+}
+
+.theme-field.is-focused {
+  border-color: var(--color-electric-cyan);
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+}
+
+.theme-field.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ─── Floating Label ─── */
+
+.theme-label {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  right: var(--space-md);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #666;
+  pointer-events: none;
+  transform-origin: left top;
+  transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 150ms ease-out;
+}
+
+.theme-label.is-floating {
+  transform: translateY(-22px) scale(0.8);
+  opacity: 0.5;
+}
+
+/* ─── Textarea ─── */
+
+.theme-textarea {
+  display: block;
+  width: 100%;
+  min-height: 60px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-pure-white);
+  line-height: 1.6;
+}
+
+.theme-textarea::placeholder {
+  color: transparent;
+}
+
+.theme-textarea:disabled {
+  cursor: not-allowed;
+}
+
+/* ─── Footer / Character Count ─── */
+
+.theme-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-sm);
+}
+
+.theme-char-count {
+  font-family: var(--font-accent);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--color-chrome-silver);
+}
+
+.theme-char-count.is-near-limit {
+  color: var(--color-hot-magenta);
+}
+
+/* ─── Reduced Motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-label {
+    transition: none;
+  }
+}

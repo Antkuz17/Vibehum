@@ -1,4 +1,4 @@
-Project: Reverse Shazam - Hum-to-Song Generator with AI Enhancements
+Project: Vibehum - Hum-to-Song Generator with AI Enhancements
 
 HIGH-LEVEL TECHNICAL OVERVIEW:
 
