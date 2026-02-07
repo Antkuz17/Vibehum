@@ -1,0 +1,29 @@
+:root {
+  /* Neo-Retro Color Palette */
+  --color-electric-cyan: #00D9FF;
+  --color-hot-magenta: #FF006E;
+  --color-acid-lime: #CCFF00;
+  --color-deep-black: #0A0A0A;
+  --color-pure-white: #FFFFFF;
+  --color-chrome-silver: #E8E8E8;
+  --color-neon-orange: #FF3D00;
+  --color-digital-purple: #9D00FF;
+
+  /* Typography */
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-accent: 'Orbitron', monospace;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 48px;
+  --space-2xl: 96px;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+}

@@ -1,0 +1,690 @@
+Project: Reverse Shazam - Hum-to-Song Generator with AI Enhancements
+
+HIGH-LEVEL TECHNICAL OVERVIEW:
+
+SYSTEM ARCHITECTURE:
+Browser-based React application that orchestrates multiple AI services to transform recorded audio into complete songs with vocals and album artwork using audio analysis.
+
+CORE DATA FLOW:
+
+1. Audio Capture Module
+   - Browser accesses microphone via Web Audio API
+   - Records 5-8 second audio clip of user humming/singing/beatboxing
+   - Stores audio as Blob in memory
+   - Provides waveform visualization during recording
+
+2. Audio Analysis Module
+   - Analyze recorded audio using Web Audio API's AnalyserNode
+   - Extract musical features:
+     * Tempo (BPM) using beat detection algorithms
+     * Key signature using pitch detection
+     * Rhythm pattern classification (syncopated, straight, swing)
+     * Energy level (0-1 scale) from amplitude analysis
+     * Melodic contour (ascending, descending, oscillating)
+   - Convert numerical features to descriptive text
+   - Example output: "128 BPM, C minor, high energy, syncopated rhythm, ascending melody"
+   - Store analysis results in application state
+
+3. Lyrics Generation Layer
+   - User provides song theme/prompt (text input: e.g., "a song about pi in the sky")
+   - Theme + selected genre sent to Claude API or GPT-4
+   - AI generates lyrics that match the genre style and theme
+   - Lyrics length constrained to 100-150 words for 30-second song
+   - Validate lyrics length before proceeding
+   - Generated lyrics stored in application state
+
+4. Music Generation Pipeline
+   - Combine audio analysis description + generated lyrics + genre into single prompt
+   - Send to ElevenLabs Music API
+   - Example prompt: "Lo-fi hip hop at 95 BPM in D major, laid back with swing rhythm, descending melody. Lyrics: [paste lyrics here]"
+   - API generates complete 30-second song (instrumental + vocals already mixed)
+   - Returns final audio file (WAV/MP3, 44.1kHz)
+   - Generated audio stored in application state
+
+5. Album Art Generation
+   - Generated lyrics + selected genre + audio analysis (tempo, energy) sent to Claude API or GPT-4
+   - AI analyzes lyrics for mood, themes, and imagery
+   - AI generates image prompt for Stable Diffusion following Neo-Retro style guide
+   - Example: "Neon cyan and magenta geometric shapes, Y2K retro aesthetic, chrome elements, high energy, album cover style"
+   - Image prompt sent to Stable Diffusion API (via HuggingFace)
+   - Returns generated album cover image
+   - Image displayed alongside audio player
+
+6. Playback & Export Module
+   - Final audio loaded into HTML5 Audio element
+   - Playback controls (play, pause, seek)
+   - Download functionality exports audio file
+   - Album art displayed as visual accompaniment
+   - Lyrics displayed as text below player
+
+COMPONENT INTERACTIONS:
+
+User Interface Layer:
+- Recording component triggers audio capture
+- Genre selector (dropdown with predefined options: "Lo-fi Hip Hop", "Energetic EDM", "Sad Jazz", "Upbeat Rock")
+- Song theme input (text field for lyric generation prompt)
+- Player component handles playback and display
+- Lyrics display component
+- Album art display component
+
+API Orchestration Layer:
+- Manages sequential and parallel API calls:
+  * Sequential: audio analysis → lyrics generation → music generation
+  * Parallel: artwork generation (can run alongside music generation)
+- Handles authentication tokens for each service
+- Implements error handling and retry logic (max 2 retries, exponential backoff)
+- Manages loading states between generation steps
+- State machine: RECORDING → ANALYZING → GENERATING_LYRICS → GENERATING_MUSIC → GENERATING_ARTWORK → COMPLETE
+
+Data Management:
+- Application state holds:
+  - Recorded audio (Blob)
+  - Audio analysis results (object with tempo, key, rhythm, energy, contour)
+  - Generated lyrics (text string)
+  - Final song with vocals (Blob)
+  - Album artwork (image URL or Blob)
+  - Song theme (text string)
+  - Selected genre (string)
+  - Current generation step (enum)
+  - Error states for each step
+- No backend database - all data ephemeral in browser session (unless MongoDB feature enabled)
+
+API DEPENDENCIES:
+
+Claude API or GPT-4:
+- Input 1 (Lyrics): song theme + genre
+- Output 1: Lyrics text (100-150 words) matched to genre style
+- Input 2 (Image Prompt): generated lyrics + genre + audio analysis
+- Output 2: Stable Diffusion prompt for album art (enforces Neo-Retro style)
+- Purpose: Generate lyrics and create descriptive prompts for artwork
+
+ElevenLabs Music API:
+- Input: Audio analysis description + lyrics + genre combined into single prompt
+- Output: Complete 30-second song (vocals + instrumental pre-mixed, 44.1kHz MP3/WAV)
+- Purpose: Generate full song based on analyzed audio features and lyrics
+- Integration point: After lyrics generation complete
+
+Stable Diffusion via HuggingFace:
+- Input: text prompt (generated by Claude/GPT-4 from lyrics + audio analysis)
+- Output: image file (PNG/JPEG)
+- Purpose: Generate album artwork matching song vibe
+- Integration point: Can run in parallel with music generation
+
+OpenAI Embeddings API (Optional - for song library feature):
+- Input: Concatenated metadata (genre + theme + lyrics + tempo)
+- Output: 1536-dimensional embedding vector
+- Purpose: Enable semantic search over saved songs
+- Cost: ~$0.0001 per song
+
+MongoDB Atlas Data API (Optional - for song library feature):
+- Operations: insertOne (save), find (retrieve songs)
+- Purpose: Persist songs across sessions and devices
+- Free tier: 512MB storage
+
+PROCESSING SEQUENCE:
+
+1. Record audio (5-8 seconds)
+2. Analyze audio → extract tempo, key, rhythm, energy, melodic contour
+3. Select genre (dropdown)
+4. Input song theme (text)
+5. Generate lyrics from theme + genre (Claude/GPT-4)
+6. Validate lyrics length (100-150 words)
+7. Generate complete song from audio analysis + lyrics + genre (ElevenLabs Music)
+8. [PARALLEL] Generate image prompt from lyrics + genre + analysis (Claude/GPT-4)
+9. [PARALLEL] Generate album art from prompt (Stable Diffusion)
+10. Display final song + artwork + lyrics for playback
+11. [OPTIONAL] Generate embedding and save to MongoDB
+
+Error Recovery:
+- Each API call is independent with retry logic (max 2 retries, exponential backoff)
+- Failed lyrics generation → use generic placeholder lyrics or abort
+- Failed music generation → critical error, retry or abort (this is core functionality)
+- Failed artwork → display default placeholder or skip
+- Failed analysis → use default tempo/key values
+- Clear error messages shown to user when retries exhausted
+
+AUDIO PROCESSING CONSIDERATIONS:
+
+Audio Analysis Implementation:
+- Use Web Audio API's AnalyserNode for frequency/time domain data
+- Extract features using DSP algorithms (FFT for pitch, autocorrelation for tempo)
+- Convert numerical features to natural language descriptions
+- Fallback values if analysis fails: "moderate tempo, unknown key, steady rhythm"
+
+Format Compatibility:
+- Browser records in WebM or WAV (browser-dependent)
+- ElevenLabs accepts standard formats, returns MP3 or WAV
+- No format conversion required - browser handles playback
+- Analysis works on raw audio data regardless of format
+
+AUTHENTICATION & SECURITY:
+
+API Keys:
+- HuggingFace: Bearer token in Authorization header
+- Claude or GPT-4: API key in Authorization header  
+- ElevenLabs: API key in xi-api-key header
+- OpenAI (embeddings): API key in Authorization header
+- MongoDB Atlas: API key in api-key header
+
+Storage:
+- Tokens stored in environment variables (.env file)
+- Exposed in frontend (acceptable for local/hackathon use)
+- Production would require backend proxy to hide keys
+
+RATE LIMITING & COSTS:
+
+HuggingFace:
+- Free tier rate limits apply
+- Stable Diffusion may be slow during high traffic
+
+Claude/GPT-4:
+- Token-based pricing
+- Lyrics generation: ~200-500 tokens per request
+- Image prompt generation: ~100-200 tokens per request
+- Free tiers available for testing
+
+ElevenLabs Music:
+- Per-generation pricing
+- 30-second song generation
+- Free tier available with limits
+
+OpenAI Embeddings (Optional):
+- ~$0.0001 per song (negligible cost)
+
+MongoDB Atlas (Optional):
+- Free tier: 512MB storage
+
+USER INPUT REQUIREMENTS:
+
+Required Inputs:
+1. Recorded audio (5-8 seconds, any musical sound - hum, beatbox, singing)
+2. Genre selection (dropdown: "Lo-fi Hip Hop", "Energetic EDM", "Sad Jazz", "Upbeat Rock")
+3. Song theme (text input: e.g., "a song about pi in the sky", "nostalgia for summer", "celebrating friendship")
+
+Optional Inputs:
+- None (all other content AI-generated from analysis)
+
+Genre Dropdown Mappings (examples - expand as needed):
+- "Lo-fi Hip Hop" → Base style: "lo-fi hip hop with soft drums and mellow piano"
+- "Energetic EDM" → Base style: "energetic EDM with heavy bass and synth drops"
+- "Sad Jazz" → Base style: "melancholic jazz with saxophone and slow piano"
+- "Upbeat Rock" → Base style: "upbeat rock with electric guitar and driving drums"
+
+Note: These base styles are combined with audio analysis (tempo, key, rhythm) to create final prompts
+
+PROGRESS TRACKING:
+
+State Machine:
+- IDLE → User has not started
+- RECORDING → Capturing audio
+- ANALYZING → Extracting musical features from audio
+- GENERATING_LYRICS → Calling Claude/GPT-4 for lyrics
+- GENERATING_MUSIC → Calling ElevenLabs Music API
+- GENERATING_ARTWORK → Calling Stable Diffusion API (parallel with music)
+- COMPLETE → All generation finished, ready for playback
+- ERROR → Something failed, display error message
+
+UI Indicators:
+- Show current step to user
+- Progress bar or step indicator (Step 3/6: Generating music...)
+- Estimated time remaining based on typical API response times
+- Disable action buttons during generation
+
+## OPTIONAL FEATURE: Song Library with Semantic Search
+
+### Overview:
+Store all generated songs in MongoDB Atlas and enable semantic search across user's song history using OpenAI embeddings. Users can search by vibe/theme (e.g., "upbeat songs about summer") rather than exact keywords.
+
+### Architecture:
+
+**Data Flow:**
+1. After song generation completes → combine metadata (genre, theme, lyrics, tempo, energy) into text
+2. Generate embedding vector via OpenAI text-embedding-3-small API
+3. Store song metadata + embedding in MongoDB Atlas via Data API (direct HTTP calls from frontend)
+4. For search: embed user query → calculate cosine similarity against all stored embeddings → return top 5 matches
+
+**Data Storage (MongoDB Atlas):**
+- Collection: "songs"
+- Documents contain: timestamp, embedding vector (1536 dimensions), metadata (genre, theme, lyrics, audio blob URL, artwork URL, audio analysis features)
+- No backend server required - use MongoDB Data API with API key in frontend .env file
+- Free tier provides 512MB storage
+
+**Embedding Generation:**
+- Use OpenAI text-embedding-3-small model
+- Input: concatenated string of genre + theme + tempo + energy + lyrics
+- Output: 1536-dimensional vector
+- Cost: ~$0.0001 per song (negligible)
+
+**Similarity Search:**
+- Fetch all songs from MongoDB
+- Calculate cosine similarity between query embedding and each song's stored embedding
+- Rank by similarity score
+- Return top 5 results
+- Computation happens client-side (fast enough for <100 songs)
+
+### API Calls Required:
+- MongoDB Atlas Data API: insertOne (save song), find (retrieve songs)
+- OpenAI Embeddings API: generate embedding for each song + each search query
+
+
+### Implementation Priority:
+Build this ONLY after core pipeline (audio → analysis → lyrics → music → artwork) is fully functional and stable. This is an enhancement to demonstrate advanced AI/ML understanding, not core functionality.
+
+
+# DESIGN SYSTEM & VISUAL STYLE GUIDE
+
+## Core Design Philosophy
+This project uses a **Neo-Retro / Y2K aesthetic** to stand out from generic AI-generated interfaces. The design should feel vibrant, playful, and nostalgic while remaining functional and modern.
+
+## CRITICAL DESIGN RULES - NEVER VIOLATE
+
+### Absolute Prohibitions:
+1. **NO purple gradients** - Purple/indigo/violet gradients are banned entirely
+2. **NO emojis** - Never use emojis in UI, labels, buttons, or text
+3. **NO Inter font** - Avoid Inter, Roboto, Arial, system fonts
+4. **NO Lucide icons everywhere** - Icons should be used sparingly, not on every button
+5. **NO glassmorphism** - No frosted glass effects, backdrop blur, or translucent cards
+6. **NO generic layouts** - Avoid three-column grids with centered content
+7. **NO timid color palettes** - Avoid muted pastels and safe neutral grays
+
+### Icon Usage Rules:
+- Icons are accents, not defaults
+- Only use icons when they add genuine clarity (play/pause, upload, download)
+- Most buttons should be text-only
+- If you must use icons, use Phosphor Icons (multiple weights) or Heroicons (NOT Lucide)
+- Never put an icon on every single button just because you can
+
+## COLOR PALETTE
+
+### Primary Colors (Vibrant & Clashing):
+- **Electric Cyan**: `#00D9FF` - Primary actions, highlights
+- **Hot Magenta**: `#FF006E` - Secondary actions, accents
+- **Acid Lime**: `#CCFF00` - Success states, energy
+- **Chrome Silver**: `#E8E8E8` - Backgrounds, neutral elements
+
+### Supporting Colors:
+- **Deep Black**: `#0A0A0A` - Text, containers
+- **Pure White**: `#FFFFFF` - Text on dark, backgrounds
+- **Neon Orange**: `#FF3D00` - Warnings, alerts
+- **Digital Purple**: `#9D00FF` - ONLY use for very small accents (not gradients, not backgrounds)
+
+### Gradient Rules:
+- **Allowed**: Cyan-to-Magenta, Lime-to-Cyan, Magenta-to-Orange
+- **Banned**: Purple-to-blue, indigo-to-violet, any pastel gradients
+- **Usage**: Only for hero sections or large decorative elements (not buttons, not cards)
+- **Direction**: Always diagonal (45deg or 135deg), never vertical
+
+## TYPOGRAPHY
+
+### Font Families:
+- **Primary Headings**: `'Space Grotesk', sans-serif` - Bold, geometric, retro-futuristic
+- **Body Text**: `'DM Sans', sans-serif` - Clean, readable, modern but not generic
+- **Accent/Special**: `'Orbitron', monospace` - For labels, metadata, timestamps
+
+### Font Weights & Sizes:
+```css
+--font-heading-xl: 700 48px 'Space Grotesk'
+--font-heading-lg: 700 32px 'Space Grotesk'
+--font-heading-md: 600 24px 'Space Grotesk'
+--font-body-lg: 500 18px 'DM Sans'
+--font-body-md: 400 16px 'DM Sans'
+--font-body-sm: 400 14px 'DM Sans'
+--font-accent: 500 12px 'Orbitron' (uppercase, letter-spacing: 0.1em)
+```
+
+### Typography Rules:
+- Headings should be **bold and geometric**
+- Use letter-spacing generously on uppercase text
+- Line-height: 1.2 for headings, 1.6 for body
+- Never use italic for emphasis - use color or weight instead
+
+## LAYOUT & SPACING
+
+### Grid System:
+- **NOT** three equal columns
+- Use asymmetric layouts: 60/40 splits, overlapping sections
+- Embrace diagonal elements and rotated containers
+- White space is generous but intentional
+
+### Spacing Scale:
+```css
+--space-xs: 4px
+--space-sm: 8px
+--space-md: 16px
+--space-lg: 24px
+--space-xl: 48px
+--space-2xl: 96px
+```
+
+### Border Radius:
+- **Small elements** (buttons, inputs): `8px` - chunky but not pill-shaped
+- **Medium elements** (cards): `16px`
+- **Large elements** (modals): `24px`
+- **Never**: Perfect circles or pills (border-radius: 50% / 9999px)
+
+## COMPONENT STYLES
+
+### Buttons:
+```css
+Primary Button:
+- Background: Linear gradient (135deg, #00D9FF 0%, #FF006E 100%)
+- Text: White, 600 weight, 16px
+- Padding: 12px 32px
+- Border-radius: 8px
+- NO icon (unless it's a play/pause button)
+- Hover: Scale to 1.05, increase brightness
+
+Secondary Button:
+- Background: Transparent
+- Border: 2px solid #00D9FF
+- Text: #00D9FF, 600 weight
+- Padding: 10px 30px
+- NO icon
+
+Text Button:
+- Background: None
+- Text: #FF006E, underline on hover
+- NO border, NO icon
+```
+
+### Input Fields:
+```css
+- Background: #0A0A0A with subtle grid texture
+- Border: 2px solid #E8E8E8, changes to #00D9FF on focus
+- Padding: 12px 16px
+- Border-radius: 8px
+- Font: 'DM Sans' 16px
+- Placeholder: #666, NOT gray-400
+```
+
+### Cards:
+```css
+- Background: #FFFFFF or #0A0A0A (high contrast, no in-between)
+- Border: 2px solid #00D9FF or #FF006E (alternating)
+- Border-radius: 16px
+- Shadow: 8px 8px 0px #FF006E (hard shadow, NOT soft blur)
+- Padding: 24px
+```
+
+### Modals/Overlays:
+```css
+- Background: #0A0A0A
+- Border: 3px solid gradient (Cyan-to-Magenta)
+- Border-radius: 24px
+- Shadow: 0 0 40px rgba(0, 217, 255, 0.5) (neon glow)
+- NO backdrop blur, NO glassmorphism
+```
+
+## VISUAL EFFECTS
+
+### Allowed Effects:
+- **Hard shadows**: `8px 8px 0px [color]` (offset shadows, not blurred)
+- **Neon glow**: `0 0 20px rgba([color], 0.6)` on interactive elements
+- **Pixelated textures**: Subtle noise or grid patterns on backgrounds
+- **Chromatic aberration**: RGB color split on hover (advanced)
+
+### Banned Effects:
+- Soft drop shadows (`0 4px 6px rgba(0,0,0,0.1)`) - too generic
+- Backdrop blur / glassmorphism
+- Subtle gradients (if you use gradients, make them BOLD)
+- Gentle transitions (use snappy 150ms or instant)
+
+## ANIMATION PRINCIPLES
+
+### Timing:
+- **Micro-interactions**: 150ms ease-out (snappy, not smooth)
+- **Page transitions**: 300ms cubic-bezier(0.4, 0, 0.2, 1)
+- **Never**: Slow fades (500ms+), gentle easing
+
+### Animation Types:
+- Scale transforms (1.0 → 1.05 on hover)
+- Color shifts (instant or very fast)
+- Hard cuts (no fade, just appear/disappear)
+- Slide-ins from edges (not center fades)
+
+## SPECIFIC COMPONENT GUIDANCE
+
+### Audio Recorder:
+- Recording button: Large circle, solid #FF006E, pulse animation when active
+- Waveform: Cyan (#00D9FF) bars on black background, sharp edges
+- Timer: Orbitron font, neon cyan glow
+
+### Genre Selector:
+- Dropdown: Custom styled (NOT native select)
+- Options appear as chunky pills with hard shadows
+- Selected state: Gradient background + white text
+
+### Music Player:
+- Play button: NO icon, just text "PLAY" in Space Grotesk bold
+- Progress bar: Thick (8px), Cyan fill on Black track
+- Waveform visualization: Magenta/Cyan alternating bars
+
+### Album Art Display:
+- Square container with 3px Magenta border
+- Hard shadow: 12px 12px 0px #00D9FF
+- NO rounded corners on the image itself
+
+## BACKGROUND TREATMENTS
+
+### Options:
+1. **Solid black** with subtle pixel grid overlay
+2. **Radial gradient** from center: Black → Dark Cyan (very dark)
+3. **Geometric patterns**: Repeating triangles, circles, or lines in Cyan/Magenta
+4. **Scanline effect**: Horizontal lines (1px) every 4px for retro CRT feel
+
+### Never:
+- Purple/blue gradient backgrounds
+- Soft blurred shapes
+- Organic blobs or waves
+- Mesh gradients
+
+## IMAGERY STYLE
+
+### Album Art from Stable Diffusion:
+- Prompt style: "vibrant Y2K aesthetic, chrome elements, digital collage, neon colors, retro futuristic"
+- Include: Geometric shapes, metallic textures, bold typography integration
+- Avoid: Soft gradients, organic shapes, minimalist composition
+
+## ACCESSIBILITY REQUIREMENTS
+
+### Contrast Ratios:
+- Text on background: Minimum 7:1 (AAA standard)
+- Interactive elements: Minimum 4.5:1
+- Test all color combinations, especially Cyan/Magenta on black
+
+### Focus States:
+- 3px solid outline in contrasting color
+- NO subtle glows - make it obvious
+- Never remove focus indicators
+
+## EXAMPLES OF WHAT TO AVOID
+
+### Bad (Generic AI Aesthetic):
+- "Modern SaaS dashboard with purple gradient hero section"
+- "Clean card layout with soft shadows and Inter font"
+- "Minimalist design with Lucide icons on every button"
+- "Glassmorphic panels with backdrop blur"
+
+### Good (Neo-Retro Y2K):
+- "Chunky interface with hard shadows and clashing neon colors"
+- "Bold geometric layout with asymmetric grid and retro fonts"
+- "High-contrast black/white base with Cyan/Magenta accents"
+- "Playful but functional with pixelated textures and sharp edges"
+
+## IMPLEMENTATION CHECKLIST
+
+Before calling any component "done," verify:
+- [ ] NO purple gradients anywhere
+- [ ] NO Inter/Roboto/Arial fonts
+- [ ] NO emojis in any UI element
+- [ ] Icons used sparingly (3 or fewer in main view)
+- [ ] Colors are BOLD not timid
+- [ ] Shadows are hard-edged, not soft
+- [ ] Typography uses Space Grotesk or DM Sans
+- [ ] Layout is asymmetric and interesting
+- [ ] Contrast ratios meet AAA standards
+- [ ] At least one Neo-Retro element (chrome effect, pixelation, neon glow, or hard shadow)
+
+## PROMPT ADDITIONS FOR AI
+
+When generating components, include these phrases:
+- "Use vibrant Neo-Retro Y2K aesthetic with Cyan and Magenta"
+- "Space Grotesk for headings, DM Sans for body text"
+- "Hard shadows (8px 8px 0px), NO soft blur"
+- "Chunky borders, sharp corners (8px-16px radius)"
+- "NO purple, NO Inter font, NO Lucide icons everywhere"
+- "High contrast, bold colors, playful but functional"
+
+---
+
+This design system ensures the music hackathon project stands out visually and avoids the generic "vibe-coded" aesthetic. Every design decision should feel intentional, bold, and distinctly Y2K-inspired.
+
+
+## ANIMATION & INTERACTION DESIGN
+
+### Animation Philosophy:
+Animations should feel **punchy, playful, and distinctly Y2K-inspired**. Avoid smooth, Apple-like transitions. Embrace snappy, exaggerated movements that feel nostalgic but modern.
+
+### Timing & Easing:
+- **Fast transitions**: 150-200ms for most interactions (NOT 300-500ms gentle fades)
+- **Easing functions**: 
+  - Use `cubic-bezier(0.34, 1.56, 0.64, 1)` for bouncy effects (overshoot animations)
+  - Use `steps(4)` for retro, pixelated movement effects
+  - AVOID: `ease-in-out`, `ease`, generic easings
+- **Delays**: Stagger multiple elements by 50ms for cascade effects
+
+### Page Transitions:
+- **Route changes**: Slide in from side with slight rotation (5-10deg)
+- **Modal appearances**: Scale from 0.8 to 1.1 to 1.0 (bounce effect)
+- **Component mounting**: Clip-path reveals (diagonal wipes, corner peels)
+- **NEVER**: Simple fades, vertical slides from center
+
+### Micro-Interactions:
+
+**Button Clicks:**
+- Scale to 0.95 on press, bounce to 1.05, settle at 1.0
+- Add slight rotation (±2deg) on hover
+- Neon glow pulse on active state
+- Hard shadow shifts position on press
+
+**Input Focus:**
+- Border color change: instant (no transition)
+- Glow effect: expand outward in 150ms
+- Label: slide up and scale down simultaneously
+- Cursor: custom animated cursor (blinking block or crosshair)
+
+**Card Hover:**
+- Lift effect: translateY(-8px) + increase hard shadow offset
+- Slight tilt toward cursor position (3D transform)
+- Border color shift (instant, no fade)
+- Content reveal: slide in from bottom with stagger
+
+**Audio Waveform:**
+- Bars animate with `cubic-bezier(0.68, -0.55, 0.265, 1.55)` (elastic)
+- Each bar staggers by 20ms
+- Peak detection: bars "pop" with scale(1.3) then settle
+- Recording pulse: radial expansion at 120 BPM rhythm
+
+**Progress States:**
+- Loading: NOT spinners - use pixelated progress bars that fill in blocks
+- Success: Confetti burst effect (small geometric shapes, cyan/magenta)
+- Error: Screen shake (translateX oscillation, 3-4 cycles)
+
+### Unique Transition Effects:
+
+**"Glitch" Transition (between generation steps):**
+```css
+@keyframes glitch {
+  0% { transform: translate(0); opacity: 1; }
+  20% { transform: translate(-2px, 2px); opacity: 0.8; }
+  40% { transform: translate(2px, -2px); opacity: 0.9; }
+  60% { transform: translate(-1px, -1px); opacity: 0.7; }
+  80% { transform: translate(1px, 1px); opacity: 0.95; }
+  100% { transform: translate(0); opacity: 1; }
+}
+/* Apply when transitioning between: Recording → Analysis → Lyrics → Music */
+```
+
+**"Scan Line" Effect (during audio analysis):**
+- Animated gradient overlay moves from top to bottom
+- Creates retro CRT scan effect
+- 2-second loop during analysis phase
+
+**"Chromatic Aberration" (on hover for album art):**
+- Split RGB channels by 2-3px in different directions
+- Red: translate(-2px, 0)
+- Green: translate(0, 0) 
+- Blue: translate(2px, 0)
+- Transition: 200ms
+
+**"VHS Distortion" (optional background effect):**
+- Horizontal line displacement
+- Occasional RGB color shift
+- Very subtle, doesn't interfere with usability
+
+### Component-Specific Animations:
+
+**Audio Recorder:**
+- Recording button: Pulsing ring expansion (3 concentric circles)
+- Waveform: Real-time bars with elastic bounce
+- Timer: Flip-card style number changes (like old scoreboards)
+
+**Genre Selector:**
+- Dropdown opens: Clip-path expand from top corner
+- Options appear: Staggered slide-in from left (50ms apart)
+- Selected state: Scale bump + color invert
+
+**Music Player:**
+- Play button: Morphs from triangle to pause bars (path animation)
+- Progress bar: Fills with animated gradient (moving shimmer)
+- Album art: Slight rotation on play (±5deg rock back-and-forth)
+
+**Lyrics Display:**
+- Lines appear: Typewriter effect + fade-in per word
+- Stagger: 100ms between lines
+- Highlight current line: Neon glow + scale(1.05)
+
+**Generation Progress:**
+- Step indicators: Fill with diagonal stripe pattern animation
+- Current step: Pulsing glow
+- Completed steps: Check mark draws in (SVG path animation)
+
+### Performance Considerations:
+- Use `transform` and `opacity` only (GPU-accelerated)
+- Avoid animating `width`, `height`, `top`, `left`
+- Use `will-change` sparingly on animated elements
+- Disable animations on low-end devices (prefers-reduced-motion)
+
+### Accessibility:
+- Respect `prefers-reduced-motion` media query
+- Provide instant transitions when reduced motion is preferred
+- Never use animation to convey critical information alone
+- Ensure animations don't cause seizures (no rapid flashing)
+
+### Examples of BANNED Animations:
+- ❌ Soft fade-ins over 500ms
+- ❌ Gentle slide-ups from bottom-center
+- ❌ Smooth scale transitions without bounce
+- ❌ Generic loading spinners (circles)
+- ❌ Apple-style gentle springs
+- ❌ Slow, elegant transitions (this isn't a luxury brand)
+
+### Examples of ENCOURAGED Animations:
+- ✅ Snappy bounces with overshoot
+- ✅ Glitch/distortion effects
+- ✅ Geometric shape explosions
+- ✅ Hard cuts with position shifts
+- ✅ Pixelated/blocky transitions
+- ✅ Neon glow pulses
+- ✅ RGB color splits
+- ✅ CRT scan lines
+
+### Implementation Notes:
+- Create reusable animation keyframes in global CSS
+- Use CSS custom properties for timing values (easy to adjust)
+- Consider Framer Motion for React (easier complex animations)
+- Test animations at 60fps minimum
+- Add animation toggles for user preference
+
+**The Golden Rule:** Every animation should feel intentional, energetic, and slightly excessive. This is Y2K maximalism, not Apple minimalism.
+

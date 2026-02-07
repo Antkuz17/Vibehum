@@ -1,0 +1,28 @@
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+.app-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 48px;
+  letter-spacing: 0.05em;
+  color: var(--color-electric-cyan);
+  text-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+  margin-bottom: var(--space-xl);
+}
+
+.audio-recorder,
+.genre-selector,
+.theme-input {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--color-chrome-silver);
+  border: 2px solid var(--color-electric-cyan);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  box-shadow: 8px 8px 0px var(--color-hot-magenta);
+}
