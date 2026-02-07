@@ -320,6 +320,41 @@ export async function generateArtwork(imagePrompt) {
   }
 }
 
+// ─── Embedding Generation ───
+
+const OPENAI_EMBEDDINGS_URL = 'https://api.openai.com/v1/embeddings'
+
+function getOpenAIKey() {
+  return import.meta.env.VITE_OPENAI_API_KEY || ''
+}
+
+/**
+ * Generate an embedding vector using OpenAI text-embedding-3-small.
+ */
+export async function generateEmbedding(text) {
+  const apiKey = getOpenAIKey()
+  if (!apiKey) throw new Error('OpenAI API key not configured. Add VITE_OPENAI_API_KEY to your .env file.')
+
+  const response = await fetch(OPENAI_EMBEDDINGS_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'text-embedding-3-small',
+      input: text.slice(0, 8000),
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`OpenAI Embedding failed: HTTP ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data.data[0].embedding
+}
+
 /**
  * Orchestrate the full song generation pipeline.
  */
@@ -364,7 +399,7 @@ export async function generateCompleteSong(recordingData, genre, theme, onProgre
     throw new Error(`Failed to generate music: ${err.message}`)
   }
 
-  // Step 3: Generate artwork via Pollinations.ai (URL construction is instant, image loads async)
+  // Step 3: Generate artwork via Hugging Face FLUX.1-schnell
   onProgress('GENERATING_ARTWORK')
   if (imagePrompt) {
     artworkUrl = await generateArtwork(imagePrompt)

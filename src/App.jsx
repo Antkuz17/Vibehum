@@ -8,9 +8,12 @@ import GenerateButton from './components/GenerateButton'
 import MusicPlayer from './components/MusicPlayer'
 import LyricsDisplay from './components/LyricsDisplay'
 import ArtworkDisplay from './components/ArtworkDisplay'
+import SongLibrary from './components/SongLibrary'
 import { generateCompleteSong } from './services/apiService'
+import { saveSongToMongo, isMongoConfigured } from './services/mongoService'
 
 function App() {
+  const [view, setView] = useState('generate') // 'generate' | 'library'
   const [recordingData, setRecordingData] = useState(null)
   const [selectedGenre, setSelectedGenre] = useState(null)
   const [theme, setTheme] = useState('')
@@ -47,6 +50,17 @@ function App() {
       if (result.errors.length > 0) {
         console.warn('Non-critical errors:', result.errors)
       }
+
+      // Save to MongoDB in background (non-blocking)
+      if (isMongoConfigured()) {
+        saveSongToMongo({
+          genre: selectedGenre,
+          theme,
+          lyrics: result.lyrics,
+          audioAnalysis: recordingData.analysisResults,
+          artworkUrl: result.artworkUrl,
+        }).catch(err => console.warn('Failed to save song to MongoDB:', err.message))
+      }
     } catch (err) {
       console.error('Generation failed:', err)
       setGenerationStep('ERROR')
@@ -76,75 +90,101 @@ function App() {
 
       <h1 className="app-title">REVERSE SHAZAM</h1>
 
-      <AudioRecorder onRecordingComplete={handleRecordingComplete} />
+      {/* ─── Navigation ─── */}
+      <nav className="app-nav">
+        <button
+          className={`nav-tab ${view === 'generate' ? 'is-active' : ''}`}
+          onClick={() => setView('generate')}
+        >
+          CREATE
+        </button>
+        <button
+          className={`nav-tab ${view === 'library' ? 'is-active' : ''}`}
+          onClick={() => setView('library')}
+        >
+          LIBRARY
+        </button>
+      </nav>
 
-      <GenreSelector
-        onChange={setSelectedGenre}
-        disabled={isGenerating}
-      />
+      {/* ─── Generate View ─── */}
+      {view === 'generate' && (
+        <>
+          <AudioRecorder onRecordingComplete={handleRecordingComplete} />
 
-      <ThemeInput
-        onChange={setTheme}
-        disabled={isGenerating}
-      />
+          <GenreSelector
+            onChange={setSelectedGenre}
+            disabled={isGenerating}
+          />
 
-      <GenerateButton
-        disabled={!canGenerate}
-        onClick={handleGenerate}
-        generationStep={generationStep}
-        error={generationError}
-        onRetry={handleRetry}
-      />
+          <ThemeInput
+            onChange={setTheme}
+            disabled={isGenerating}
+          />
 
-      {/* ─── Results Section ─── */}
-      {generatedSong && generationStep === 'COMPLETE' && (
-        <div className="results-section">
-          {/* Two-column: lyrics left, artwork right */}
-          <div className="results-grid">
-            <div className="results-col-lyrics">
-              <LyricsDisplay
-                lyrics={generatedSong.lyrics}
-                isPlaying={isPlaying}
-                audioRef={audioRef}
-              />
+          <GenerateButton
+            disabled={!canGenerate}
+            onClick={handleGenerate}
+            generationStep={generationStep}
+            error={generationError}
+            onRetry={handleRetry}
+          />
+
+          {/* ─── Results Section ─── */}
+          {generatedSong && generationStep === 'COMPLETE' && (
+            <div className="results-section">
+              {/* Two-column: lyrics left, artwork right */}
+              <div className="results-grid">
+                <div className="results-col-lyrics">
+                  <LyricsDisplay
+                    lyrics={generatedSong.lyrics}
+                    isPlaying={isPlaying}
+                    audioRef={audioRef}
+                  />
+                </div>
+
+                <div className="results-col-artwork">
+                  <ArtworkDisplay
+                    artworkUrl={generatedSong.artworkUrl}
+                    title={theme}
+                    genre={selectedGenre}
+                    isPlaying={isPlaying}
+                  />
+                </div>
+              </div>
+
+              {/* Full-width player below */}
+              {generatedSong.audioBlob && (
+                <MusicPlayer
+                  audioBlob={generatedSong.audioBlob}
+                  title={theme}
+                  onPlayStateChange={setIsPlaying}
+                  onAudioRef={setAudioRef}
+                />
+              )}
+
+              {/* Non-critical warnings */}
+              {generatedSong.errors.length > 0 && (
+                <div className="result-warnings">
+                  {generatedSong.errors.map((err, i) => (
+                    <p key={i} className="result-warning">{err}</p>
+                  ))}
+                </div>
+              )}
+
+              {/* Start over button */}
+              <div className="results-footer">
+                <button className="start-over-btn" onClick={handleStartOver}>
+                  GENERATE ANOTHER SONG
+                </button>
+              </div>
             </div>
-
-            <div className="results-col-artwork">
-              <ArtworkDisplay
-                artworkUrl={generatedSong.artworkUrl}
-                title={theme}
-                genre={selectedGenre}
-                isPlaying={isPlaying}
-              />
-            </div>
-          </div>
-
-          {/* Full-width player below */}
-          {generatedSong.audioBlob && (
-            <MusicPlayer
-              audioBlob={generatedSong.audioBlob}
-              title={theme}
-              onPlayStateChange={setIsPlaying}
-              onAudioRef={setAudioRef}
-            />
           )}
+        </>
+      )}
 
-          {/* Non-critical warnings */}
-          {generatedSong.errors.length > 0 && (
-            <div className="result-warnings">
-              {generatedSong.errors.map((err, i) => (
-                <p key={i} className="result-warning">{err}</p>
-              ))}
-            </div>
-          )}
-
-          {/* Start over button */}
-          <div className="results-footer">
-            <button className="start-over-btn" onClick={handleStartOver}>
-              GENERATE ANOTHER SONG
-            </button>
-          </div>
-        </div>
+      {/* ─── Library View ─── */}
+      {view === 'library' && (
+        <SongLibrary />
       )}
     </div>
   )

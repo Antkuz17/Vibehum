@@ -29,7 +29,41 @@
   letter-spacing: 0.05em;
   color: var(--color-electric-cyan);
   text-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+  margin-bottom: var(--space-lg);
+}
+
+/* ─── Navigation Tabs ─── */
+
+.app-nav {
+  display: flex;
+  gap: var(--space-sm);
   margin-bottom: var(--space-xl);
+}
+
+.nav-tab {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  color: var(--color-chrome-silver);
+  background: transparent;
+  border: 2px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: color 0ms, border-color 0ms, background 0ms;
+}
+
+.nav-tab:hover {
+  color: var(--color-electric-cyan);
+  border-bottom-color: rgba(0, 217, 255, 0.3);
+}
+
+.nav-tab.is-active {
+  color: var(--color-electric-cyan);
+  border-bottom-color: var(--color-electric-cyan);
+  text-shadow: 0 0 12px rgba(0, 217, 255, 0.5);
 }
 
 /* ─── Component Containers ─── */
