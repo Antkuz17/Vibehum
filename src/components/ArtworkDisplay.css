@@ -75,6 +75,82 @@
   filter: grayscale(100%) brightness(0.4) sepia(100%) hue-rotate(180deg) saturate(600%);
 }
 
+/* ─── Loading State ─── */
+
+.artwork-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  background: var(--color-deep-black);
+}
+
+.artwork-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 60px;
+  height: 60px;
+}
+
+.artwork-loading-block {
+  background: var(--color-electric-cyan);
+  animation: loading-block-blink 1.2s steps(2) infinite;
+}
+
+.artwork-loading-block:nth-child(1) { animation-delay: 0ms; }
+.artwork-loading-block:nth-child(2) { animation-delay: 100ms; }
+.artwork-loading-block:nth-child(3) { animation-delay: 200ms; }
+.artwork-loading-block:nth-child(4) { animation-delay: 300ms; }
+.artwork-loading-block:nth-child(5) { animation-delay: 400ms; }
+.artwork-loading-block:nth-child(6) { animation-delay: 500ms; }
+.artwork-loading-block:nth-child(7) { animation-delay: 600ms; }
+.artwork-loading-block:nth-child(8) { animation-delay: 700ms; }
+.artwork-loading-block:nth-child(9) { animation-delay: 800ms; }
+
+@keyframes loading-block-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.15; }
+}
+
+.artwork-loading-text {
+  font-family: var(--font-accent);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--color-electric-cyan);
+  animation: loading-text-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes loading-text-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ─── Error State ─── */
+
+.artwork-error {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-deep-black);
+}
+
+.artwork-error-text {
+  font-family: var(--font-accent);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--color-hot-magenta);
+}
+
 /* ─── Placeholder ─── */
 
 .artwork-placeholder {
@@ -150,5 +226,14 @@
 
   .artwork-aberration {
     transition: none;
+  }
+
+  .artwork-loading-block {
+    animation: none;
+    opacity: 0.5;
+  }
+
+  .artwork-loading-text {
+    animation: none;
   }
 }

@@ -4,7 +4,8 @@
       "Bash(npm create:*)",
       "Bash(npx vite build:*)",
       "Bash(npm install:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(del \"c:\\\\Users\\\\Anton\\\\Documents\\\\CXC 2026\\\\src\\\\services\\\\artworkGenerator.js\")"
     ]
   }
 }
