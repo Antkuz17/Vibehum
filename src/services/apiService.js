@@ -21,7 +21,7 @@ export const GENRE_PROMPTS = {
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const ELEVENLABS_MUSIC_URL = 'https://api.elevenlabs.io/v1/music/generate'
-const HUGGINGFACE_INFERENCE_URL = 'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell'
+const HUGGINGFACE_INFERENCE_URL = '/huggingface-api/models/stabilityai/stable-diffusion-v1-5';
 
 function getOpenRouterKey() {
   return import.meta.env.VITE_OPENROUTER_API_KEY || ''
@@ -275,48 +275,67 @@ Return ONLY the image prompt text — no explanation, no quotes, no labels.`,
 }
 
 /**
- * Generate album artwork using Hugging Face Inference API (FLUX.1-schnell).
+ * Generate album artwork using Hugging Face Inference SDK.
+ * Uses the new Inference Providers API which routes to available providers automatically.
  * Returns an object URL of the generated image blob.
  */
 export async function generateArtwork(imagePrompt) {
-  const apiKey = getHuggingFaceKey()
-  if (!apiKey) {
-    console.warn('Hugging Face API key not configured — skipping artwork generation')
-    return null
-  }
-
   try {
-    console.log('Generating artwork with Hugging Face...')
-    const enhancedPrompt = enhancePromptForAlbumArt(imagePrompt)
+    console.log('Generating artwork via Hugging Face...');
 
-    const response = await retryWithBackoff(async () => {
-      const res = await fetch(HUGGINGFACE_INFERENCE_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ inputs: enhancedPrompt }),
-      })
+    const HF_API_KEY = getHuggingFaceKey();
+    if (!HF_API_KEY) {
+      console.warn('No Hugging Face API key found - add VITE_HUGGINGFACE_API_KEY to .env');
+      return null;
+    }
 
-      if (!res.ok) {
-        if (res.status === 503) {
-          const data = await res.json()
-          throw new Error(`Model loading: ${data.estimated_time || 20}s`)
+    const enhancedPrompt = enhancePromptForAlbumArt(imagePrompt);
+
+    // Dynamically import the HF inference client
+    const { InferenceClient } = await import('@huggingface/inference');
+    const client = new InferenceClient(HF_API_KEY);
+
+    // Try up to 3 times with exponential backoff
+    let lastError;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        // Use the SDK's textToImage method which handles provider routing automatically
+        const imageBlob = await client.textToImage({
+          model: 'black-forest-labs/FLUX.1-schnell',
+          inputs: enhancedPrompt,
+          parameters: {
+            num_inference_steps: 4,
+          }
+        });
+
+        // Convert blob to object URL
+        const imageUrl = URL.createObjectURL(imageBlob);
+
+        console.log('Artwork generated successfully');
+        return imageUrl;
+      } catch (err) {
+        lastError = err;
+
+        // Check if it's a model loading error
+        if (err.message && err.message.includes('loading')) {
+          const waitTime = 20;
+          console.log(`Model loading... waiting ${waitTime}s (attempt ${attempt + 1}/3)`);
+          await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+          continue;
         }
-        throw new Error(`HTTP ${res.status}`)
+
+        if (attempt < 2) {
+          const delay = Math.pow(2, attempt) * 2000; // 2s, 4s
+          console.warn(`Attempt ${attempt + 1} failed, retrying in ${delay / 1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
+    }
 
-      return res
-    })
-
-    const blob = await response.blob()
-    const imageUrl = URL.createObjectURL(blob)
-    console.log('Artwork generated successfully')
-    return imageUrl
+    throw lastError;
   } catch (err) {
-    console.error('Artwork generation failed:', err.message)
-    return null
+    console.error('Artwork generation failed:', err.message);
+    return null;
   }
 }
 
