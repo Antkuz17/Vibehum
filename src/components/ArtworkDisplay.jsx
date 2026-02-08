@@ -5,6 +5,10 @@ function ArtworkDisplay({ artworkUrl, title, genre, isPlaying }) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
 
+  if (!artworkUrl) {
+    console.warn('No artwork URL provided. Displaying placeholder.')
+  }
+
   if (artworkUrl) {
     return (
       <div className={`artwork-display ${isPlaying ? 'is-playing' : ''}`}>
